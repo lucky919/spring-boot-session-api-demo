@@ -55,6 +55,18 @@ public class SessionServiceImpl implements ISessionService {
 		return false;
 	}
 	
+	@Override
+	public void deleteSession(String userId) {
+		log.info("about to delete session for user - {}", userId);
+		if (userId != null) {
+			SessionEntity session = sessionRepo.findByUserId(userId);
+			if (session != null) {
+				sessionRepo.delete(session);
+				log.info("delete session for userId - {} successfully", userId);
+			}
+		}
+	}
+	
 	private void updateSession(SessionEntity session) {
 		session.setLastVisitTime(new Date());
 		sessionRepo.save(session);

@@ -1,5 +1,7 @@
 package com.learn.apidemo.web;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.modelmapper.ModelMapper;
@@ -7,6 +9,9 @@ import org.modelmapper.convention.MatchingStrategies;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.SecurityContextLogoutHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -15,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.learn.apidemo.domain.UserEntity;
 import com.learn.apidemo.dto.RegisterUserRequestModel;
 import com.learn.apidemo.dto.RegisterUserResponseModel;
+import com.learn.apidemo.service.ISessionService;
 import com.learn.apidemo.service.IUserService;
 
 import lombok.extern.log4j.Log4j2;
@@ -25,6 +31,9 @@ public class UsersController {
 
 	@Autowired
 	private IUserService userService;
+	
+	@Autowired
+	private ISessionService sessionService;
 	
 	@GetMapping("/dummy")
 	public String status() {
@@ -44,6 +53,19 @@ public class UsersController {
 		return ResponseEntity.status(HttpStatus.CREATED).body(model);
 	}
 	
-	
+	@PostMapping("/signout")
+	public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+	    if (auth != null){    
+	    	log.info("Logout in progress with auth - {}", auth.getPrincipal());
+	    	String userId = (String)auth.getPrincipal();
+	        new SecurityContextLogoutHandler().logout(request, response, auth);
+	        sessionService.deleteSession(userId);
+	    } else {
+	    	log.info("something went wrong with logout");
+	    }
+	    
+		return ResponseEntity.status(HttpStatus.ACCEPTED).build();
+	}
 	
 }
